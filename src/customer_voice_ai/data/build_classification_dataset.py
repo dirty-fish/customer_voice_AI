@@ -27,7 +27,7 @@ def main() -> None:
     df = df[df[LABEL_COLUMN].isin(keep_classes)]
 
     balanced_parts = []
-    for label, group in df.groupby(LABEL_COLUMN):
+    for _label, group in df.groupby(LABEL_COLUMN):
         n = min(len(group), MAX_ROWS_PER_CLASS)
         balanced_parts.append(group.sample(n=n, random_state=RANDOM_STATE))
 
@@ -55,4 +55,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    

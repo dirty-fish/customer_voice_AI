@@ -33,3 +33,5 @@ ruff
 mypy
 
 requests
+
+httpx
