@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: customer-voice-ai
+Version: 0.1.0
+Summary: Customer feedback analytics platform with dynamic NLP classification and AI agent.
+Requires-Python: >=3.11
