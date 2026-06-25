@@ -1,8 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
 
-from customer_voice_ai.agent.complaint_analysis_agent import get_complaint_analysis_agent
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+#from customer_voice_ai.agent.complaint_analysis_agent import get_complaint_analysis_agent
+from customer_voice_ai.agent.langgraph_agent import run_complaint_graph
 from customer_voice_ai.analytics import get_complaint_analytics
 from customer_voice_ai.api.schemas import (
+    AgentFeedbackRequest,
+    AgentFeedbackResponse,
     AnalyzeComplaintRequest,
     AnalyzeComplaintResponse,
     ClassifyCommentRequest,
@@ -11,11 +17,13 @@ from customer_voice_ai.api.schemas import (
     SearchComplaintsRequest,
     SearchComplaintsResponse,
 )
+from customer_voice_ai.db.repositories import AgentFeedbackRepository
+from customer_voice_ai.db.session import get_db_session
 from customer_voice_ai.ml.product_classifier import get_product_classifier
 from customer_voice_ai.rag.local_search import get_complaint_search
 
 router = APIRouter()
-
+DatabaseSession = Annotated[Session, Depends(get_db_session)]
 
 @router.post("/comments/classify", response_model=ClassifyCommentResponse)
 def classify_comment(request: ClassifyCommentRequest) -> ClassifyCommentResponse:
@@ -49,8 +57,47 @@ def product_summary(top_n: int = 10) -> ProductSummaryResponse:
     result = analytics.product_summary(top_n=top_n)
     return ProductSummaryResponse(**result)
 
-@router.post("/agent/analyze", response_model=AnalyzeComplaintResponse)
+"""@router.post("/agent/analyze", response_model=AnalyzeComplaintResponse)
 def analyze_complaint(request: AnalyzeComplaintRequest) -> AnalyzeComplaintResponse:
     agent = get_complaint_analysis_agent()
     result = agent.analyze(query=request.query, top_k=request.top_k)
-    return AnalyzeComplaintResponse(**result)
+    return AnalyzeComplaintResponse(**result)"""
+
+@router.post("/agent/analyze", response_model=AnalyzeComplaintResponse)
+def analyze_complaint(request: AnalyzeComplaintRequest) -> AnalyzeComplaintResponse:
+    result = run_complaint_graph(query=request.query, top_k=request.top_k)
+
+    return AnalyzeComplaintResponse(
+        query=result["query"],
+        answer=result["answer"],
+        answer_source=result["answer_source"],
+        classification=result["classification"],
+        related_issues=result["related_issues"],
+        similar_complaints=result["search_results"],
+    )
+
+@router.post("/agent/feedback", response_model=AgentFeedbackResponse)
+def save_agent_feedback(
+    request: AgentFeedbackRequest,
+    db: DatabaseSession,
+) -> AgentFeedbackResponse:
+    repository = AgentFeedbackRepository(db)
+    feedback = repository.create(
+        query=request.query,
+        answer=request.answer,
+        rating=request.rating,
+        comment=request.comment,
+        answer_source=request.answer_source,
+        classification_status=request.classification_status,
+    )
+
+    return AgentFeedbackResponse(
+        feedback_id=feedback.feedback_id,
+        created_at=feedback.created_at.isoformat(),
+        query=feedback.query,
+        answer=feedback.answer,
+        rating=feedback.rating,
+        comment=feedback.comment,
+        answer_source=feedback.answer_source,
+        classification_status=feedback.classification_status,
+    )

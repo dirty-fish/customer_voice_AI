@@ -67,6 +67,26 @@ class AnalyzeComplaintRequest(BaseModel):
 class AnalyzeComplaintResponse(BaseModel):
     query: str
     answer: str
+    answer_source: str
     classification: dict
     related_issues: list[IssueCount]
     similar_complaints: list[ComplaintSearchResult]
+
+class AgentFeedbackRequest(BaseModel):
+    query: str = Field(min_length=1)
+    answer: str = Field(min_length=1)
+    rating: int = Field(ge=1, le=5)
+    comment: str | None = None
+    answer_source: str | None = None
+    classification_status: str | None = None
+
+
+class AgentFeedbackResponse(BaseModel):
+    feedback_id: str
+    created_at: str
+    query: str
+    answer: str
+    rating: int
+    comment: str | None = None
+    answer_source: str | None = None
+    classification_status: str | None = None

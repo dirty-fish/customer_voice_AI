@@ -63,3 +63,28 @@ def test_agent_analyze() -> None:
     assert payload["answer"]
     assert payload["classification"]["label"]
     assert len(payload["similar_complaints"]) == 2
+    assert payload["answer_source"] in {"deterministic", "llm"}
+
+def test_save_agent_feedback() -> None:
+    response = client.post(
+        "/agent/feedback",
+        json={
+            "query": "Why are customers complaining about debt collection?",
+            "answer": (
+                "Debt collection complaints are mainly related to attempts "
+                "to collect debt not owed."
+            ),
+            "rating": 4,
+            "comment": "Useful answer.",
+            "answer_source": "llm",
+            "classification_status": "known",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["feedback_id"]
+    assert payload["rating"] == 4
+    assert payload["answer_source"] == "llm"
+    assert payload["classification_status"] == "known"
