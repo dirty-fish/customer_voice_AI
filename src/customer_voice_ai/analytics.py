@@ -1,52 +1,70 @@
 from functools import lru_cache
-from pathlib import Path
 
-import pandas as pd
+from sqlalchemy import desc, func, select
 
-DATA_PATH = Path("data/processed/product_classification_dataset.csv")
+from customer_voice_ai.db.models import Complaint
+from customer_voice_ai.db.session import SessionLocal
 
 
 class ComplaintAnalytics:
-    def __init__(self, data_path: Path = DATA_PATH) -> None:
-        if not data_path.exists():
-            raise FileNotFoundError(f"Dataset not found: {data_path}")
-
-        self.df = pd.read_csv(data_path)
-        self.df["date_received"] = pd.to_datetime(self.df["date_received"], errors="coerce")
-
     def product_summary(self, top_n: int = 10) -> dict:
-        product_counts = self.df["product"].value_counts().head(top_n)
+        with SessionLocal() as session:
+            total_rows = session.scalar(select(func.count()).select_from(Complaint)) or 0
 
-        issue_counts = (
-            self.df.groupby(["product", "issue"])
-            .size()
-            .reset_index(name="count")
-            .sort_values(["product", "count"], ascending=[True, False])
-        )
+            top_products_rows = session.execute(
+                select(Complaint.product, func.count().label("count"))
+                .group_by(Complaint.product)
+                .order_by(desc("count"))
+                .limit(top_n)
+            ).all()
 
-        top_issues_by_product = {}
-        for product, group in issue_counts.groupby("product"):
-            top_issues_by_product[product] = (
-                group.head(5)[["issue", "count"]].to_dict(orient="records")
+            top_products = [
+                {"product": product, "count": int(count)}
+                for product, count in top_products_rows
+            ]
+
+            issue_rows = session.execute(
+                select(
+                    Complaint.product,
+                    Complaint.issue,
+                    func.count().label("count"),
                 )
+                .group_by(Complaint.product, Complaint.issue)
+                .order_by(Complaint.product, desc("count"))
+            ).all()
 
-        monthly_counts = (
-            self.df.dropna(subset=["date_received"])
-            .assign(month=lambda data: data["date_received"].dt.to_period("M").astype(str))
-            .groupby(["month", "product"])
-            .size()
-            .reset_index(name="count")
-            .sort_values(["month", "count"], ascending=[True, False])
-        )
+            top_issues_by_product: dict[str, list[dict]] = {}
+            for product, issue, count in issue_rows:
+                product_issues = top_issues_by_product.setdefault(product, [])
+                if len(product_issues) < 5:
+                    product_issues.append(
+                        {"issue": issue, "count": int(count)}
+                    )
+
+            monthly_rows = session.execute(
+                select(
+                    func.to_char(
+                        func.date_trunc("month", Complaint.date_received),
+                        "YYYY-MM",
+                    ).label("month"),
+                    Complaint.product,
+                    func.count().label("count"),
+                )
+                .where(Complaint.date_received.is_not(None))
+                .group_by("month", Complaint.product)
+                .order_by("month", desc("count"))
+            ).all()
+
+            monthly_counts = [
+                {"month": month, "product": product, "count": int(count)}
+                for month, product, count in monthly_rows[-50:]
+            ]
 
         return {
-            "total_rows": int(len(self.df)),
-            "top_products": [
-                {"product": product, "count": int(count)}
-                for product, count in product_counts.items()
-            ],
+            "total_rows": int(total_rows),
+            "top_products": top_products,
             "top_issues_by_product": top_issues_by_product,
-            "monthly_counts": monthly_counts.tail(50).to_dict(orient="records"),
+            "monthly_counts": monthly_counts,
         }
 
 

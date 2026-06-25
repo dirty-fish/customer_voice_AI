@@ -5,7 +5,9 @@ from langgraph.graph import END, StateGraph
 from customer_voice_ai.agent.llm_answer_composer import compose_llm_answer
 from customer_voice_ai.analytics import get_complaint_analytics
 from customer_voice_ai.ml.product_classifier import get_product_classifier
-from customer_voice_ai.rag.local_search import get_complaint_search
+
+#from customer_voice_ai.rag.local_search import get_complaint_search
+from customer_voice_ai.rag.pgvector_search import get_pgvector_complaint_search
 
 
 class ComplaintAgentState(TypedDict, total=False):
@@ -30,7 +32,8 @@ def classify_query(state: ComplaintAgentState) -> ComplaintAgentState:
 
 
 def search_similar_complaints(state: ComplaintAgentState) -> ComplaintAgentState:
-    search = get_complaint_search()
+    #search = get_complaint_search()
+    search = get_pgvector_complaint_search()
     state["search_results"] = search.search(
         query=state["query"],
         top_k=state.get("top_k", 3),

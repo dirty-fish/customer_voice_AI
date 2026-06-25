@@ -35,3 +35,4 @@ mypy
 requests
 
 httpx
+pgvector
