@@ -1,4 +1,4 @@
-.PHONY: install lint test check db-up db-down migrate api load-complaints load-embeddings backfill-topics backfill-csi eval-rag train-embedding-classifier
+.PHONY: install lint test check db-up db-down migrate api load-complaints load-embeddings backfill-topics backfill-csi eval-rag train-embedding-classifier ingest-cfpb-api ingest-cfpb-csv
 
 install:
 	pip install -r requirements.txt
@@ -40,3 +40,9 @@ eval-rag:
 
 train-embedding-classifier:
 	python -m customer_voice_ai.ml.train_product_embedding_classifier
+
+ingest-cfpb-api:
+	python -m customer_voice_ai.data.ingest_cfpb --source api --rows 20000 --fallback-csv-path data/raw/complaints.csv
+
+ingest-cfpb-csv:
+	python -m customer_voice_ai.data.ingest_cfpb --source csv --csv-path data/raw/complaints.csv --rows 20000
