@@ -19,3 +19,6 @@ strict = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "integration: tests that require local database, trained artifacts, or embedding indexes",
+    ]

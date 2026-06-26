@@ -1,4 +1,4 @@
-.PHONY: install lint test check db-up db-down migrate api load-complaints load-embeddings backfill-topics
+.PHONY: install lint test check db-up db-down migrate api load-complaints load-embeddings backfill-topics backfill-csi eval-rag train-embedding-classifier
 
 install:
 	pip install -r requirements.txt
@@ -31,3 +31,12 @@ load-embeddings:
 
 backfill-topics:
 	python scripts/backfill_topic_embeddings.py
+
+backfill-csi:
+	python scripts/backfill_csi_fields.py
+
+eval-rag:
+	python -m customer_voice_ai.evaluation.evaluate_rag_retrieval
+
+train-embedding-classifier:
+	python -m customer_voice_ai.ml.train_product_embedding_classifier

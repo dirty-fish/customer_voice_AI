@@ -1,6 +1,9 @@
+import pytest
+
 from customer_voice_ai.agent.langgraph_agent import run_complaint_graph
 from customer_voice_ai.core.config import get_settings
 
+pytestmark = pytest.mark.integration
 
 def test_run_complaint_graph(monkeypatch) -> None:
     settings = get_settings()

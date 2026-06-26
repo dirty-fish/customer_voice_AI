@@ -146,3 +146,45 @@ class ClassificationRuntimeMetricsResponse(BaseModel):
     classification_status_counts: dict[str, int]
     recommended_action_counts: dict[str, int]
     topic_match_status_counts: dict[str, int]
+
+class ProductCsiSummary(BaseModel):
+    product: str
+    avg_csi_score: float
+    count: int
+
+
+class MonthlyCsiSummary(BaseModel):
+    month: str
+    avg_csi_score: float
+    count: int
+
+
+class CsiSummaryResponse(BaseModel):
+    total_rows: int
+    avg_csi_score: float | None
+    sentiment_counts: dict[str, int]
+    severity_counts: dict[str, int]
+    lowest_csi_products: list[ProductCsiSummary]
+    monthly_csi: list[MonthlyCsiSummary]
+
+class CsiDriver(BaseModel):
+    issue: str
+    product: str
+    avg_csi_score: float
+    count: int
+
+
+class CsiDriversResponse(BaseModel):
+    min_count: int
+    drivers: list[CsiDriver]
+
+class SummarizeComplaintsRequest(BaseModel):
+    query: str = Field(min_length=1)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+
+class SummarizeComplaintsResponse(BaseModel):
+    query: str
+    summary: str
+    summary_source: str
+    complaints: list[ComplaintSearchResult]

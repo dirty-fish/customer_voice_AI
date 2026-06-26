@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import BigInteger, DateTime, Integer, String, Text
+from sqlalchemy import BigInteger, DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -69,7 +69,11 @@ class Complaint(Base):
     company: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
     state: Mapped[str | None] = mapped_column(String(64), nullable=True)
     submitted_via: Mapped[str | None] = mapped_column(String(64), nullable=True)
-
+    csi_score: Mapped[float | None] = mapped_column(Float, nullable=True, index=True)
+    sentiment: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    severity: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    feedback_channel: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    customer_segment: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     narrative: Mapped[str] = mapped_column(Text)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(384), nullable=True)
 

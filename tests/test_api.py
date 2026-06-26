@@ -1,9 +1,10 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from customer_voice_ai.api.main import app
 
+pytestmark = pytest.mark.integration
 client = TestClient(app)
-
 
 def test_health() -> None:
     response = client.get("/health")
@@ -275,3 +276,42 @@ def test_classification_runtime_metrics() -> None:
     assert isinstance(payload["classification_status_counts"], dict)
     assert isinstance(payload["recommended_action_counts"], dict)
     assert isinstance(payload["topic_match_status_counts"], dict)
+
+def test_csi_summary() -> None:
+    response = client.get("/analytics/csi-summary")
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["total_rows"] >= 1
+    assert payload["avg_csi_score"] is None or 1 <= payload["avg_csi_score"] <= 5
+    assert isinstance(payload["sentiment_counts"], dict)
+    assert isinstance(payload["severity_counts"], dict)
+    assert isinstance(payload["lowest_csi_products"], list)
+    assert isinstance(payload["monthly_csi"], list)
+
+def test_csi_drivers() -> None:
+    response = client.get("/analytics/csi-drivers?min_count=20&limit=5")
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["min_count"] == 20
+    assert isinstance(payload["drivers"], list)
+
+def test_summarize_complaints() -> None:
+    response = client.post(
+        "/complaints/summarize",
+        json={
+            "query": "debt collector calling about a debt I do not owe",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["query"]
+    assert payload["summary"]
+    assert payload["summary_source"] in {"deterministic", "llm"}
+    assert len(payload["complaints"]) == 3

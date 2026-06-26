@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from customer_voice_ai.agent.complaint_summarizer import summarize_complaints
+
 #from customer_voice_ai.agent.complaint_analysis_agent import get_complaint_analysis_agent
 from customer_voice_ai.agent.langgraph_agent import run_complaint_graph
 from customer_voice_ai.analytics import get_complaint_analytics
@@ -15,12 +17,16 @@ from customer_voice_ai.api.schemas import (
     ClassifyCommentRequest,
     ClassifyCommentResponse,
     CreateTopicRequest,
+    CsiDriversResponse,
+    CsiSummaryResponse,
     MatchTopicsRequest,
     MatchTopicsResponse,
     ProductSummaryResponse,
     ReviewUncertainClassificationRequest,
     SearchComplaintsRequest,
     SearchComplaintsResponse,
+    SummarizeComplaintsRequest,
+    SummarizeComplaintsResponse,
     TopicResponse,
     UncertainClassificationResponse,
 )
@@ -183,6 +189,12 @@ def analyze_complaint(request: AnalyzeComplaintRequest) -> AnalyzeComplaintRespo
     result = agent.analyze(query=request.query, top_k=request.top_k)
     return AnalyzeComplaintResponse(**result)"""
 
+@router.get("/analytics/csi-summary", response_model=CsiSummaryResponse)
+def csi_summary() -> CsiSummaryResponse:
+    analytics = get_complaint_analytics()
+    result = analytics.csi_summary()
+    return CsiSummaryResponse(**result)
+
 @router.post("/agent/analyze", response_model=AnalyzeComplaintResponse)
 def analyze_complaint(request: AnalyzeComplaintRequest) -> AnalyzeComplaintResponse:
     result = run_complaint_graph(query=request.query, top_k=request.top_k)
@@ -286,3 +298,30 @@ def match_topics(request: MatchTopicsRequest) -> MatchTopicsResponse:
 
     return MatchTopicsResponse(matches=matches)
 
+@router.get("/analytics/csi-drivers", response_model=CsiDriversResponse)
+def csi_drivers(
+    min_count: int = 20,
+    limit: int = 10,
+) -> CsiDriversResponse:
+    analytics = get_complaint_analytics()
+    result = analytics.csi_drivers(min_count=min_count, limit=limit)
+    return CsiDriversResponse(**result)
+
+@router.post("/complaints/summarize", response_model=SummarizeComplaintsResponse)
+def summarize_retrieved_complaints(
+    request: SummarizeComplaintsRequest,
+) -> SummarizeComplaintsResponse:
+    search = get_pgvector_complaint_search()
+    complaints = search.search(query=request.query, top_k=request.top_k)
+
+    summary, summary_source = summarize_complaints(
+        query=request.query,
+        complaints=complaints,
+    )
+
+    return SummarizeComplaintsResponse(
+        query=request.query,
+        summary=summary,
+        summary_source=summary_source,
+        complaints=complaints,
+    )
