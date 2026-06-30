@@ -55,17 +55,18 @@
 - `scripts/` — backfill CSI fields, topic embeddings, запуск агента.
 
 Схема потоков данных:
-0. Client source adapters (deleted) → canonical CSV.
-1. CFPB API или CSV → canonical CSV.
-2. Canonical CSV → processed classification dataset.
-3. Processed dataset → обучение модели продукта.
-4. Processed dataset → embeddings → pgvector.
-5. FastAPI получает текст → классификатор → статус `known/uncertain`.
-6. Если uncertain → запись в `uncertain_classifications`.
-7. Если включен topic matching → поиск ближайших тем через pgvector.
-8. Все классификации → запись в `classification_events`.
-9. Agent endpoint → classification + semantic search + analytics + LLM/fallback answer.
-10. Feedback endpoint → запись в `agent_feedback`.
+
+  0. Client source adapters (deleted) → canonical CSV.
+  1. CFPB API или CSV → canonical CSV.
+  2. Canonical CSV → processed classification dataset.
+  3. Processed dataset → обучение модели продукта.
+  4. Processed dataset → embeddings → pgvector.
+  5. FastAPI получает текст → классификатор → статус `known/uncertain`.
+  6. Если uncertain → запись в `uncertain_classifications`.
+  7. Если включен topic matching → поиск ближайших тем через pgvector.
+  8. Все классификации → запись в `classification_events`.
+  9. Agent endpoint → classification + semantic search + analytics + LLM/fallback answer.
+  10. Feedback endpoint → запись в `agent_feedback`.
 
 # 4. Источники данных
 
