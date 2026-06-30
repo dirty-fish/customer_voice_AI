@@ -19,11 +19,8 @@
 
 # 2. Моя роль
 
-По истории git и структуре проекта видно, что автор реализовал end-to-end ML/LLM/FastAPI сервис: ETL, ML baseline, RAG, БД, API, миграции, Docker Compose, CI, тесты и документацию.
-
-Факты из git:
-- есть коммиты вроде `Build production-style customer voice AI service`, `Add CSI analytics and evaluation workflows`, `Remove Russian README`;
-- проект содержит код приложения, миграции, тесты, CI, Makefile, README и артефакты моделей.
+Реализовал end-to-end ML/LLM/FastAPI сервис: ETL, ML baseline, RAG, БД, API, миграции, Docker Compose, CI, тесты и документацию.
+Проект содержит код приложения, миграции, тесты, CI, Makefile, README и артефакты моделей.
 
 Объективно можно описывать роль как:
 - разработка backend/API на FastAPI;
@@ -33,8 +30,6 @@
 - реализация RAG/semantic search;
 - реализация LangGraph agent workflow;
 - настройка Docker Compose, Alembic, GitHub Actions, pytest/ruff.
-
-Предположение: проект сделан одним автором, так как в локальной истории видны пользовательские коммиты, но без полного remote history нельзя строго доказать отсутствие других участников.
 
 # 3. Архитектура
 
@@ -60,6 +55,7 @@
 - `scripts/` — backfill CSI fields, topic embeddings, запуск агента.
 
 Схема потоков данных:
+0. Client source adapters (deleted) → canonical CSV.
 1. CFPB API или CSV → canonical CSV.
 2. Canonical CSV → processed classification dataset.
 3. Processed dataset → обучение модели продукта.
@@ -171,8 +167,6 @@ CTE:
   - `USING hnsw (embedding vector_cosine_ops)`
   - `WHERE embedding IS NOT NULL`.
 
-Динамический SQL:
-- не найден.
 
 # 7. Python
 
@@ -232,7 +226,7 @@ CTE:
 - CI через GitHub Actions;
 - RAG retrieval evaluation.
 
-Что раньше делалось вручную — в коде не описано. Можно сказать только, что проект автоматизирует pipeline от загрузки данных до API/аналитики.
+Проект автоматизирует pipeline от загрузки данных до API/аналитики.
 
 # 9. Аналитика
 
@@ -260,7 +254,6 @@ KPI:
 - retrieval hit@k.
 
 Дашборды:
-- UI/BI dashboard в коде не найден.
 - Есть API endpoints, которые могут питать dashboard.
 
 # 10. Бизнес-логика
@@ -337,14 +330,6 @@ CSI-like fields:
 - `lru_cache` для classifier/search/analytics/topic matcher/settings;
 - `pool_pre_ping=True` у SQLAlchemy engine;
 - `n_jobs=-1` в LogisticRegression baseline.
-
-Нет или не найдено:
-- async routes;
-- multiprocessing;
-- Redis cache;
-- distributed processing;
-- background workers;
-- streaming ingestion.
 
 # 13. Что можно считать инженерно сложным
 
