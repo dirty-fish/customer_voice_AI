@@ -1,13 +1,24 @@
 # Customer Voice AI
 
-Production-oriented demo project for customer feedback analytics.
+Production ready project for customer feedback analytics.
 
 The system analyzes customer complaint narratives, detects topics, supports dynamically extendable classes, and provides an AI analytics agent over structured and semantic search data.
+
+## CI
+
+The repository includes a GitHub Actions workflow that runs:
+
+- dependency installation;
+- Alembic migrations;
+- ruff linting;
+- pytest test suite.
+
+The CI service uses PostgreSQL with pgvector.
 
 # RU.ver
 # Customer Voice AI
 
-Демонстрационный проект, ориентированный на промышленное применение, для анализа обратной связи от клиентов.
+Коммерческий проект, примененимый для анализа обратной связи от клиентов.
 
 Система анализирует описания клиентских жалоб, выявляет темы, поддерживает динамическое расширение набора классов и предоставляет AI-агента для аналитики на основе структурированных данных и семантического поиска.
 
@@ -371,4 +382,4 @@ Threshold evaluation показывает trade-off между coverage и preci
 - dynamic taxonomy updates;
 - runtime observability.
 
-Кодовая база остается компактной, но границы компонентов выбраны так, чтобы являться базовым устройством production ML-сервиса.
+Кодовая база обрезана, но границы компонентов выбраны так, чтобы являться базовым устройством production ML-сервиса.
